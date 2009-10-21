@@ -1,0 +1,33 @@
+%define name powerpc-utils-python
+%define version 1.2.1
+%define release 0
+Summary:	Python utilities for PowerPC platforms
+Name:		%{name}
+Version:	%{version}
+Release:	%{release}
+License:	IBM Common Public License (CPL)
+Group:		System Environment
+Source0:	N/A
+BuildRoot:	/tmp/%{name}-buildroot/
+
+%description
+Python based utilities for maintaining and servicing PowerPC systems.
+
+%files 
+%defattr(-,root,root)
+/usr/share/doc/packages/powerpc-utils-python/README
+/usr/share/doc/packages/powerpc-utils-python/COPYRIGHT
+
+/usr/bin/amsvis
+@PYTHON_SITE_PKGS@/powerpcAMS-%{version}-py@PY_VERSION@.egg-info
+@PYTHON_SITE_PKGS@/powerpcAMS/__init__.py
+@PYTHON_SITE_PKGS@/powerpcAMS/__init__.pyc
+@PYTHON_SITE_PKGS@/powerpcAMS/amsdata.py
+@PYTHON_SITE_PKGS@/powerpcAMS/amsdata.pyc
+@PYTHON_SITE_PKGS@/powerpcAMS/amsnet.py
+@PYTHON_SITE_PKGS@/powerpcAMS/amsnet.pyc
+@PYTHON_SITE_PKGS@/powerpcAMS/amswidget.py
+@PYTHON_SITE_PKGS@/powerpcAMS/amswidget.pyc
+
+/usr/share/man/man1/amsvis.1
+
