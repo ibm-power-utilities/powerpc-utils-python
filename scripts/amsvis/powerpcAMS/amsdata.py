@@ -8,10 +8,6 @@ __author__ = "Robert Jennings rcj@linux.vnet.ibm.com"
 __copyright__ = "Copyright (c) 2008 IBM Corporation"
 __license__ = "Common Public License v1.0"
 
-__version__ = "$Revision: 1.5 $"
-__date__ = "$Date: 2009/01/20 21:28:29 $"
-# $Source: /cvsroot/powerpc-utils/powerpc-utils-papr/scripts/amsvis/powerpcAMS/amsdata.py,v $
-
 import os
 import logging
 import types
