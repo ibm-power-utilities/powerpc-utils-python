@@ -1,5 +1,5 @@
 %define name powerpc-utils-python
-%define version 1.2.1
+%define version @PPU_PYTHON_VERSION@
 %define release 0
 Summary:	Python utilities for PowerPC platforms
 Name:		%{name}
@@ -7,11 +7,19 @@ Version:	%{version}
 Release:	%{release}
 License:	IBM Common Public License (CPL)
 Group:		System Environment
-Source0:	N/A
+Source0:	powerpc-utils-python-%{version}.tar.gz
 BuildRoot:	/tmp/%{name}-buildroot/
 
 %description
 Python based utilities for maintaining and servicing PowerPC systems.
+
+%prep
+%setup -q
+
+%build
+%install
+%{__rm} -rf $RPM_BUILD_ROOT
+%{__make} install DESTDIR=$RPM_BUILD_ROOT
 
 %files 
 %defattr(-,root,root)
@@ -22,12 +30,16 @@ Python based utilities for maintaining and servicing PowerPC systems.
 @PYTHON_SITE_PKGS@/powerpcAMS-%{version}-py@PY_VERSION@.egg-info
 @PYTHON_SITE_PKGS@/powerpcAMS/__init__.py
 @PYTHON_SITE_PKGS@/powerpcAMS/__init__.pyc
+@PYTHON_SITE_PKGS@/powerpcAMS/__init__.pyo
 @PYTHON_SITE_PKGS@/powerpcAMS/amsdata.py
 @PYTHON_SITE_PKGS@/powerpcAMS/amsdata.pyc
+@PYTHON_SITE_PKGS@/powerpcAMS/amsdata.pyo
 @PYTHON_SITE_PKGS@/powerpcAMS/amsnet.py
 @PYTHON_SITE_PKGS@/powerpcAMS/amsnet.pyc
+@PYTHON_SITE_PKGS@/powerpcAMS/amsnet.pyo
 @PYTHON_SITE_PKGS@/powerpcAMS/amswidget.py
 @PYTHON_SITE_PKGS@/powerpcAMS/amswidget.pyc
+@PYTHON_SITE_PKGS@/powerpcAMS/amswidget.pyo
 
-/usr/share/man/man1/amsvis.1
+/usr/share/man/man1/amsvis.1.gz
 
