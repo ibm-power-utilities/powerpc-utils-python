@@ -5,6 +5,8 @@
 PPU_PYTHON_VERSION = 1.2.1
 SUBDIRS = scripts man
 FILES = README COPYRIGHT
+DIST_FILES = $(FILES) Makefile powerpc-utils-python.spec.in
+DIST_DIR = powerpc-utils-python-$(PPU_PYTHON_VERSION)
 DOCS_DIR = /usr/share/doc/packages/powerpc-utils-python
 
 INSTALL := `which install`
@@ -36,9 +38,20 @@ uninstall:
 	@$(foreach f,$(FILES), echo Un-installing $(f); $(RM) $(DESTDIR)$(DOCS_DIR)/$(f);)
 	@$(foreach d,$(SUBDIRS), $(MAKE) -C $d uninstall;)
 
+dist:
+	@echo "Creating dist..."
+	@$(RM) $(DIST_DIR).tar.gz
+	@mkdir $(DIST_DIR)
+	@cp $(DIST_FILES) $(DIST_DIR)
+	@$(MAKE) PPUP_DIST_DIR=$(PWD)/$(DIST_DIR) -C man dist
+	@$(MAKE) PPUP_DIST_DIR=$(PWD)/$(DIST_DIR) -C scripts dist
+	@tar cf $(DIST_DIR).tar $(DIST_DIR)
+	@gzip $(DIST_DIR).tar
+	@$(RM) -r $(DIST_DIR)
+
 clean:
 	@$(foreach d,$(SUBDIRS), $(MAKE) -C $d clean;)
 
 distclean: clean
-	@$(RM) $(IN_FILES)
+	@$(RM) $(IN_FILES) $(DIST_DIR).tar.gz
 	@$(foreach d,$(SUBDIRS), $(MAKE) -C $d distclean;)

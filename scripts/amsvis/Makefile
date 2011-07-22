@@ -15,6 +15,9 @@ MODULE_FILES := $(notdir $(wildcard $(MODULES_DIR)/*.py))
 PYTHONLIBS := `python -c "from distutils.sysconfig import get_python_lib; print get_python_lib()"`
 PYTHONLIBS_AMS := $(DESTDIR)/$(PYTHONLIBS)/$(MODULES_DIR)
 
+DIST_FILES = amsvis Makefile setup.py.in
+DIST_DIRS = powerpcAMS
+
 INSTALL := `which install`
 RM := `which rm`
 
@@ -23,6 +26,12 @@ all:
 	@sed "s|\@VERSION\@|$(AMSVIS_VERSION)|g" setup.py.in > setup.py
 	@echo "Running setup.py"
 	@python setup.py build
+
+dist:
+	@mkdir $(PPUP_DIST_DIR)/amsvis
+	@cp $(DIST_FILES) $(PPUP_DIST_DIR)/amsvis
+	@mkdir $(PPUP_DIST_DIR)/amsvis/powerpcAMS
+	@cp powerpcAMS/* $(PPUP_DIST_DIR)/amsvis/powerpcAMS
 
 install: all
 	@echo "Installing amsvis"

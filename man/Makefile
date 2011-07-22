@@ -4,11 +4,16 @@
 
 MAN_FILES = amsvis.1
 MAN_DIR = /usr/share/man/man1
+DIST_FILES = $(MAN_FILES) Makefile
 
 INSTALL := `which install`
 RM = `which rm`
 
 all:
+
+dist:
+	@mkdir $(PPUP_DIST_DIR)/man
+	@cp $(DIST_FILES) $(PPUP_DIST_DIR)/man
 
 install:
 	@$(INSTALL) -d -m 755 $(DESTDIR)$(MAN_DIR)
