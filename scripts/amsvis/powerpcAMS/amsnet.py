@@ -10,25 +10,23 @@ __date__ = "$Date: 2009/01/16 16:39:10 $"
 # $Source: /cvsroot/powerpc-utils/powerpc-utils-papr/scripts/amsvis/powerpcAMS/amsnet.py,v $
 
 import socket
-import sys
-import os
 import types
 import logging
 import cPickle as pickle
-from optparse import OptionParser
 
-from powerpcAMS.amsdata import *
+from powerpcAMS.amsdata import gather_all_data, gather_system_data
 
-cmd_GET_ALL_DATA = 0
-cmd_GET_SYS_DATA = 1
-cmd_MAX = 1
-data_methods = (gather_all_data, gather_system_data)
+CMD_GET_ALL_DATA = 0
+CMD_GET_SYS_DATA = 1
+CMD_MAX = 1
+DATA_METHODS = (gather_all_data, gather_system_data)
 
-# Update cmdvers each time a new method is added to data_methods.
+# Update CMDVERS each time a new method is added to DATA_METHODS.
 # The update should increment the digits to the right of the decimal point.
 # The digits to the left of the decimal point should be increased when
 # backwards compatibility is broken.
-cmdvers = 1.0000000
+CMDVERS = 1.0000000
+
 
 def send_data_loop(port):
     """Send pickled data to any client that connects to a given network port.
@@ -37,7 +35,7 @@ def send_data_loop(port):
     port -- network port number to use for this server
     """
 
-    sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM);
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         sock.bind(('', port))
@@ -54,7 +52,7 @@ def send_data_loop(port):
             sock.listen(1)
             (conn, addr) = sock.accept()
             logging.debug("Client connected from " + repr(addr))
-            sockfile = conn.makefile('rwb',0)
+            sockfile = conn.makefile('rwb', 0)
 
             result = "success"
             data = None
@@ -74,33 +72,33 @@ def send_data_loop(port):
             # Currently the server only expects a dictionary from the client
             # with the following values to send AMS data:
             # {"command":0, "version":1.0}
-            if (result is not "error" and 
+            if (result is not "error" and
                  ("version" not in client_data or
-                  client_data["version"] > cmdvers or
-                  int(client_data["version"]) != int(cmdvers))):
+                  client_data["version"] > CMDVERS or
+                  int(client_data["version"]) != int(CMDVERS))):
                 logging.debug("Unsupported client request version, ignoring.")
                 result = "error"
-                data = "Unsupported version, server is %f" % cmdvers
+                data = "Unsupported version, server is %f" % CMDVERS
 
             if (result is not "error" and
                  ("command" not in client_data or
                   client_data["command"] < 0 or
-                  client_data["command"] > cmd_MAX)):
+                  client_data["command"] > CMD_MAX)):
                 logging.debug("Unsupported request from client, ignoring.")
                 result = "error"
                 data = "Unsupported request"
 
             if result is not "error":
-                data_method = data_methods[client_data["command"]]
+                data_method = DATA_METHODS[client_data["command"]]
 
                 # Gather system data and send pickled objects to the client
                 data = data_method()
                 if data is None:
                     result = "error"
                     data = "Unspecified data gathering error, check server log."
-                logging.debug("Sending %d data objects to client." % len(data))
+                logging.debug("Sending %d data objects to client.", len(data))
 
-            response = {"result":result, "data":data}
+            response = {"result": result, "data": data}
             sockfile.writelines(pickle.dumps(response, -1))
 
             # Clean up
@@ -141,8 +139,9 @@ def send_data_loop(port):
         logging.error("Unknown error while sending data.")
         raise
 
+
 # Client
-def net_get_data(host="localhost", port=50000, cmd=cmd_GET_ALL_DATA):
+def net_get_data(host="localhost", port=50000, cmd=CMD_GET_ALL_DATA):
     """Get pickled data from a simple network server.
 
     Keywork arguments:
@@ -154,28 +153,35 @@ def net_get_data(host="localhost", port=50000, cmd=cmd_GET_ALL_DATA):
     """
     data = {}
 
-    sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
-        sock.connect((host,port))
+        sock.connect((host, port))
     except socket.error, msg:
         (errno, errstr) = msg.args
         logging.error("Network error: (%d) " % errno + errstr)
-        return {"result":"error","data":"Client: Is the server still running?"}
+        return {
+            "result": "error",
+            "data": "Client: Is the server still running?",
+        }
 
-    sockfile = sock.makefile('rwb',0) # read/write, unbuffered
+    sockfile = sock.makefile('rwb', 0) # read/write, unbuffered
 
     # By sending a request to the server, including a version for the data
     # request, we can change the data sent by the server in the future.
-    if type(cmd) is types.IntType and cmd >= 0 and cmd <= cmd_MAX:
-        client_request = {"command":cmd, "version":cmdvers}
-        logging.debug("Sending request for %s (ver:%f)" %
-                      (client_request["command"], client_request["version"]))
+    if type(cmd) is types.IntType and cmd >= 0 and cmd <= CMD_MAX:
+        client_request = {"command": cmd, "version": CMDVERS}
+        logging.debug("Sending request for %s (ver:%f)",
+                      client_request["command"],
+                      client_request["version"])
     else:
         logging.error("BUG: Unknown command request for network client.")
         print type(cmd)
         print repr(cmd)
-        return {"result":"error","data":"Client: Bad request."}
+        return {
+            "result": "error",
+            "data": "Client: Bad request.",
+        }
 
     sockfile.writelines(pickle.dumps(client_request, -1))
 
@@ -189,7 +195,10 @@ def net_get_data(host="localhost", port=50000, cmd=cmd_GET_ALL_DATA):
     sock.close()
 
     if type(data) is not types.DictType or "result" not in data:
-        data = {"result":"error", "data":"Unknown server error"}
+        data = {
+            "result": "error",
+            "data": "Unknown server error",
+        }
 
     logging.debug("Data returned to client: " + repr(data))
 

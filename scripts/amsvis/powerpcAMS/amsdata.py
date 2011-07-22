@@ -1,7 +1,7 @@
 """Tooling to read/parse AMS-related data from system files in /proc and /sys.
 
-The data can be read by calling gather_all_data() and is returned as a 3-tuple of
-dictionaries for system data, bus data, and data for devices.
+The data can be read by calling gather_all_data() and is returned as a
+3-tuple of dictionaries for system data, bus data, and data for devices.
 """
 
 __author__ = "Robert Jennings rcj@linux.vnet.ibm.com"
@@ -13,9 +13,9 @@ __date__ = "$Date: 2009/01/20 21:28:29 $"
 # $Source: /cvsroot/powerpc-utils/powerpc-utils-papr/scripts/amsvis/powerpcAMS/amsdata.py,v $
 
 import os
-import sys
 import logging
 import types
+
 
 def _read_file_for_data(filename, params, split_char=':', rstrip="",
                         input_dict={}):
@@ -39,49 +39,53 @@ def _read_file_for_data(filename, params, split_char=':', rstrip="",
     """
     vals = input_dict
     try:
-        file = open(filename)
-        for line in file:
+        fileh = open(filename)
+        for line in fileh:
             (var, sep, val) = line.partition(split_char)
             if var in params:
                 vals[params[var]] = int(val.strip().rstrip(rstrip))
-        file.close()
+        fileh.close()
     except (IOError, OSError), data:
         logging.error("Error encountered while collecting data:")
         logging.error("  " + str(data))
         return None
     return vals
 
-def _read_file_as_data(file):
+
+def _read_file_as_data(filename):
     """Read a file for the single value it contains and return that value as
     a types.IntType.
 
     Keyword arguments:
-    file - File to read for data.
+    filename - Name of file to read for data.
 
     Returns:
     Value from file as types.IntType or None on error.
     """
-    file = open(file)
-    value = int(file.readline().strip())
-    file.close()
+    fileh = open(filename)
+    value = int(fileh.readline().strip())
+    fileh.close()
     return value
 
 
 def _get_system_data():
     """Capture system memory usage statistics from a number of sources."""
     meminfo_file = "/proc/meminfo"
-    meminfo_params = {"MemTotal" : "memtotal",
-                      "MemFree"  : "memfree",
-                      "Buffers"  : "buffers",
-                      "Cached"   : "cached"}
+    meminfo_params = {
+        "MemTotal": "memtotal",
+        "MemFree": "memfree",
+        "Buffers": "buffers",
+        "Cached": "cached",
+    }
     lparcfg_file = "/proc/ppc64/lparcfg"
-    lparcfg_params = {"cmo_faults" : "faults",
-                      "cmo_fault_time_usec" : "faulttime"}
+    lparcfg_params = {
+        "cmo_faults": "faults",
+        "cmo_fault_time_usec": "faulttime"}
     cmm_path = "/sys/devices/system/cmm/cmm0/"
-    cmm_params = {"loaned_kb":"memloaned"}
+    cmm_params = {"loaned_kb": "memloaned"}
     sys_data = {}
 
-    sys_data = _read_file_for_data(meminfo_file , meminfo_params, ':',
+    sys_data = _read_file_for_data(meminfo_file, meminfo_params, ':',
                                    rstrip=" kB")
 
     if sys_data is None:
@@ -89,7 +93,7 @@ def _get_system_data():
         return None
 
     sys_data = _read_file_for_data(lparcfg_file, lparcfg_params, '=',
-                                    input_dict = sys_data)
+                                   input_dict=sys_data)
 
     if sys_data is None:
         logging.error("Unable to gather system data (lparcfg).")
@@ -100,7 +104,8 @@ def _get_system_data():
 
     for param in cmm_params:
         try:
-            sys_data[cmm_params[param]] = _read_file_as_data(os.path.join(cmm_path, param))
+            sys_data[cmm_params[param]] = \
+                _read_file_as_data(os.path.join(cmm_path, param))
         except (IOError, OSError):
             sys_data[cmm_params[param]] = None
 
@@ -109,23 +114,26 @@ def _get_system_data():
 
     return sys_data
 
+
 def _get_bus_data():
     """Capture VIO bus data from sysfs regarding memory entitlement."""
     bus_path = "/sys/bus/vio/"
-    bus_params = {"cmo_entitled"     : "entitled",
-                  "cmo_min"          : "min",
-                  "cmo_desired"      : "desired",
-                  "cmo_curr"         : "curr",
-                  "cmo_reserve_size" : "reserve",
-                  "cmo_excess_size"  : "excess",
-                  "cmo_excess_free"  : "excessfree",
-                  "cmo_high"         : "high",
-                  "cmo_spare"        : "spare"}
+    bus_params = {
+        "cmo_entitled": "entitled",
+        "cmo_min": "min",
+        "cmo_desired": "desired",
+        "cmo_curr": "curr",
+        "cmo_reserve_size": "reserve",
+        "cmo_excess_size": "excess",
+        "cmo_excess_free": "excessfree",
+        "cmo_high": "high",
+        "cmo_spare": "spare"}
     bus_data = {}
 
     try:
         for param in bus_params:
-            bus_data[bus_params[param]] = _read_file_as_data(os.path.join(bus_path, param))
+            bus_data[bus_params[param]] = \
+                _read_file_as_data(os.path.join(bus_path, param))
     except (IOError, OSError), data:
         logging.error("Error encountered while collecting AMS bus data:")
         logging.error("  " + str(data))
@@ -138,6 +146,7 @@ def _get_bus_data():
 
     return bus_data
 
+
 def _get_device_data():
     """Capture data for devices on the VIO bus regarding memory entitlement.
 
@@ -147,9 +156,10 @@ def _get_device_data():
         Returns None on error.
     """
     dev_path = "/sys/bus/vio/devices/"
-    dev_params = {"cmo_desired"      : "desired",
-        "cmo_entitled"     : "entitled",
-        "cmo_allocated"    : "allocated",
+    dev_params = {
+        "cmo_desired": "desired",
+        "cmo_entitled": "entitled",
+        "cmo_allocated": "allocated",
         "cmo_allocs_failed": "allocs_failed"}
     devices = {}
 
@@ -160,19 +170,22 @@ def _get_device_data():
             if (entry != "vio" and
                 os.path.isdir(os.path.join(dev_path, entry)))]
     except (IOError, OSError), data:
-        logging.error("Error encountered while discovering devices on the virtual IO bus:")
+        logging.error("Error encountered while discovering devices on " +
+            "the virtual IO bus:")
         logging.error("  " + str(data))
-        logging.error("Does this system have virtual IO devices or VIO bus support?")
+        logging.error("Does this system have virtual IO devices or VIO " +
+            "bus support?")
         return None
 
     # Collect data for each device
-    for dir in dev_dirs:
+    for directory in dev_dirs:
         dev_vals = {}
         try:
-            name = dir.replace(dev_path, "")
+            name = directory.replace(dev_path, "")
             dev_vals["name"] = name
             for param in dev_params:
-                dev_vals[dev_params[param]] = _read_file_as_data(os.path.join(dir, param))
+                dev_vals[dev_params[param]] = \
+                    _read_file_as_data(os.path.join(directory, param))
         except (IOError, OSError):
             # In the case that there is a problem we remove the device
             # by setting the entitlement to 0
@@ -190,6 +203,7 @@ def _get_device_data():
                 devices[dev][key] = int(devices[dev][key] / 1024)
 
     return devices
+
 
 def gather_all_data():
     """ Gather all data from the OS for AMS and assemble.
@@ -222,6 +236,7 @@ def gather_all_data():
                                         device_data[dev]["entitled"])
 
     return sys_data, bus_data, device_data
+
 
 def gather_system_data():
     """ Gather only system data from the OS for AMS and assemble.

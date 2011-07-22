@@ -10,18 +10,18 @@ __date__ = "$Date: 2009/01/21 15:38:20 $"
 # $Source: /cvsroot/powerpc-utils/powerpc-utils-papr/scripts/amsvis/powerpcAMS/amswidget.py,v $
 
 import gtk
-from gtk import gdk
 import cairo
 import math
-import types
 
-class ams_widget(gtk.DrawingArea):
+
+class AMSWidget(gtk.DrawingArea):
     """Memory metrics widget based on a gtk.DrawingArea
 
     This widget should be used directly, it is provided as a base
     class for subclassing widgets to display specific AMS memory metrics."""
+
     def __init__(self, data={}):
-        super(ams_widget, self).__init__()
+        super(AMSWidget, self).__init__()
 
         # gtk.Widget signals
         self.connect("expose_event", self.expose)
@@ -69,10 +69,24 @@ class ams_widget(gtk.DrawingArea):
                               (min_height + (self.settings["border"] * 2)))
 
         # Graphics colors (used for drawing the objects and the legend)
-        self.settings["widget_bg"] = {"r":0.1, "g":0.1, "b":0.1}
-        self.settings["bar_bg"] = {"r":1.0, "g":1.0, "b":1.0}
-        self.settings["title_rgba"] = {"r":0.9, "g":0.9, "b":0.9, "a":1.0}
-        self.settings["text_rgba"] = {"r":0.9, "g":0.9, "b":0.9, "a":1.0}
+        self.settings["widget_bg"] = {
+            "r": 0.1,
+            "g": 0.1,
+            "b": 0.1}
+        self.settings["bar_bg"] = {
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0}
+        self.settings["title_rgba"] = {
+            "r": 0.9,
+            "g": 0.9,
+            "b": 0.9,
+            "a": 1.0}
+        self.settings["text_rgba"] = {
+            "r": 0.9,
+            "g": 0.9,
+            "b": 0.9,
+            "a": 1.0}
 
         # Font variables
         self.settings["title_font_name"] = "Courier New"
@@ -82,6 +96,7 @@ class ams_widget(gtk.DrawingArea):
         self.settings["label_height"] = 10
 
     def expose(self, widget, event):
+        """Draw this widget"""
         context = widget.window.cairo_create()
         context.rectangle(event.area.x, event.area.y, event.area.width,
                           event.area.height)
@@ -182,7 +197,7 @@ class ams_widget(gtk.DrawingArea):
         linear.add_color_stop_rgb(0.0, self.settings["bar_bg"]["r"],
                                   self.settings["bar_bg"]["g"],
                                   self.settings["bar_bg"]["b"])
-        linear.add_color_stop_rgb(1.0,  (self.settings["bar_bg"]["r"] * 0.8),
+        linear.add_color_stop_rgb(1.0, (self.settings["bar_bg"]["r"] * 0.8),
                                   (self.settings["bar_bg"]["g"] * 0.8),
                                   (self.settings["bar_bg"]["b"] * 0.8))
         cr.set_source(linear)
@@ -267,6 +282,7 @@ class ams_widget(gtk.DrawingArea):
         return
 
     def redraw_canvas(self):
+        """Update the canvas with widget"""
         if self.window:
             alloc = self.get_allocation()
             self.queue_draw_area(0, 0, alloc.width, alloc.height)
@@ -303,10 +319,12 @@ class ams_widget(gtk.DrawingArea):
         if update is True:
             self.redraw_canvas()
 
-class system_name_widget(ams_widget):
+
+class SystemNameWidget(AMSWidget):
     """Widget to display the name of a system based on a gtk.DrawingArea"""
+
     def __init__(self, hostname=None):
-        super(system_name_widget, self).__init__()
+        super(SystemNameWidget, self).__init__()
 
         self.hostname = hostname
 
@@ -344,15 +362,28 @@ class system_name_widget(ams_widget):
             self.window.process_updates(True)
 
 
-class system_memory_widget(ams_widget):
+class SystemMemoryWidget(AMSWidget):
     """Widget to display system memory metrics based on a gtk.DrawingArea"""
+
     def __init__(self, data={}):
-        super(system_memory_widget, self).__init__(data)
+        super(SystemMemoryWidget, self).__init__(data)
 
         # Graphics colors (used for drawing the objects and the legend)
-        self.settings["loaned_rgba"] = {"r":0.4, "g":0.4, "b":0.4, "a":0.9}
-        self.settings["used_rgba"] = {"r":0.2, "g":0.8, "b":0.2, "a":0.6}
-        self.settings["used_other_rgba"] = {"r":0.2, "g":0.8, "b":0.2, "a":0.4}
+        self.settings["loaned_rgba"] = {
+            "r": 0.4,
+            "g": 0.4,
+            "b": 0.4,
+            "a": 0.9}
+        self.settings["used_rgba"] = {
+            "r": 0.2,
+            "g": 0.8,
+            "b": 0.2,
+            "a": 0.6}
+        self.settings["used_other_rgba"] = {
+            "r": 0.2,
+            "g": 0.8,
+            "b": 0.2,
+            "a": 0.4}
 
     def expose(self, widget, event):
         context = widget.window.cairo_create()
@@ -370,7 +401,7 @@ class system_memory_widget(ams_widget):
         cr.save()
 
         # Set the coordinates and scale
-        cr.move_to(0,0)
+        cr.move_to(0, 0)
         cr.translate((self.settings["border"] + self.settings["title_width"]),
                      self.settings["border"])
         cr.scale(((self.settings["bar_width"] * 2) -
@@ -384,13 +415,14 @@ class system_memory_widget(ams_widget):
         bar_width = 0.5 / self.hist_size
         bar_x = 0.5 - bar_width
         bar_overlap = 0.005
-        for iter in range(len(self.data)):
+        for itr in range(len(self.data)):
             # Create a types.FloatType representation of memtotal so that
-            # division operations used for drawing are not cast to types.IntType
-            fl_memtotal = float(self.data[iter]["memtotal"])
+            # division operations used for drawing are not cast to
+            # types.IntType
+            fl_memtotal = float(self.data[itr]["memtotal"])
 
             # Draw used from bottom
-            used_height = self.data[iter]["memused"] / fl_memtotal
+            used_height = self.data[itr]["memused"] / fl_memtotal
             used_y = 1 - used_height
             cr.set_source_rgba(self.settings["used_rgba"]["r"],
                                self.settings["used_rgba"]["g"],
@@ -400,8 +432,8 @@ class system_memory_widget(ams_widget):
             cr.fill()
 
             # Draw used (buffers and cache) next
-            used_other_height = ((self.data[iter]["buffers"] +
-                                  self.data[iter]["cached"]) /
+            used_other_height = ((self.data[itr]["buffers"] +
+                                  self.data[itr]["cached"]) /
                                  fl_memtotal)
             used_other_y = used_y - used_other_height
             cr.set_source_rgba(self.settings["used_other_rgba"]["r"],
@@ -413,13 +445,14 @@ class system_memory_widget(ams_widget):
             cr.fill()
 
             # Draw loaned from top
-            if self.data[iter]["memloaned"] is not None:
-                loaned_height = self.data[iter]["memloaned"] / fl_memtotal
+            if self.data[itr]["memloaned"] is not None:
+                loaned_height = self.data[itr]["memloaned"] / fl_memtotal
                 cr.set_source_rgba(self.settings["loaned_rgba"]["r"],
                                    self.settings["loaned_rgba"]["g"],
                                    self.settings["loaned_rgba"]["b"],
                                    self.settings["loaned_rgba"]["a"])
-                cr.rectangle(bar_x, 0, (bar_width + bar_overlap), loaned_height)
+                cr.rectangle(bar_x, 0, (bar_width + bar_overlap),
+                             loaned_height)
                 cr.fill()
 
             bar_x -= bar_width
@@ -453,17 +486,39 @@ class system_memory_widget(ams_widget):
             self.queue_draw_area(0, 0, alloc.width, alloc.height)
             self.window.process_updates(True)
 
-class iobus_memory_widget(ams_widget):
+
+class IOBusMemoryWidget(AMSWidget):
     """Widget to display system memory metrics based on a gtk.DrawingArea"""
+
     def __init__(self, data={}):
-        super(iobus_memory_widget, self).__init__(data)
+        super(IOBusMemoryWidget, self).__init__(data)
 
         # Graphics colors (used for drawing the objects and the legend)
-        self.settings["spare_rgba"] = {"r":0.5, "g":1.0, "b":0.9, "a":0.6}
-        self.settings["reserve_used_rgba"] = {"r":0.2, "g":0.6, "b":0.2, "a":0.6}
-        self.settings["excess_used_rgba"] = {"r":1.0, "g": 0.4, "b":0.5, "a":0.6}
-        self.settings["reserve_rgba"] = {"r":0.2, "g":1.0, "b":0.2, "a":0.8}
-        self.settings["high_rgba"] = {"r":1.0, "g":0.2, "b":0.2, "a":0.8}
+        self.settings["spare_rgba"] = {
+            "r": 0.5,
+            "g": 1.0,
+            "b": 0.9,
+            "a": 0.6}
+        self.settings["reserve_used_rgba"] = {
+            "r": 0.2,
+            "g": 0.6,
+            "b": 0.2,
+            "a": 0.6}
+        self.settings["excess_used_rgba"] = {
+            "r": 1.0,
+            "g": 0.4,
+            "b": 0.5,
+            "a": 0.6}
+        self.settings["reserve_rgba"] = {
+            "r": 0.2,
+            "g": 1.0,
+            "b": 0.2,
+            "a": 0.8}
+        self.settings["high_rgba"] = {
+            "r": 1.0,
+            "g": 0.2,
+            "b": 0.2,
+            "a": 0.8}
 
     def expose(self, widget, event):
         context = widget.window.cairo_create()
@@ -482,7 +537,7 @@ class iobus_memory_widget(ams_widget):
         cr.save()
 
         # Set the coordinates and scale
-        cr.move_to(0,0)
+        cr.move_to(0, 0)
         cr.translate((self.settings["border"] + self.settings["title_width"]),
                     self.settings["border"])
         cr.scale(((self.settings["bar_width"] * 2) -
@@ -501,22 +556,23 @@ class iobus_memory_widget(ams_widget):
         # division operations used for drawing are not cast to types.IntType
         fl_entitled = float(self.data[0]["entitled"])
 
-        for iter in range(len(self.data)):
+        for itr in range(len(self.data)):
             # Draw spare on bottom
             cr.set_source_rgba(self.settings["spare_rgba"]["r"],
                                self.settings["spare_rgba"]["g"],
                                self.settings["spare_rgba"]["b"],
                                self.settings["spare_rgba"]["a"])
-            spare_height = (self.data[iter]["spare"] / fl_entitled)
+            spare_height = (self.data[itr]["spare"] / fl_entitled)
             spare_y = 1 - spare_height
             cr.rectangle(bar_x, spare_y, (bar_width + bar_overlap),
                          spare_height)
             cr.fill()
 
             # Draw reserve used above spare (reserve value includes spare)
-            reserve_used = self.data[iter]["curr"] - (self.data[iter]["spare"] +
-                           (self.data[iter]["excess"] -
-                            self.data[iter]["excessfree"]))
+            reserve_used = (self.data[itr]["curr"] -
+                            (self.data[itr]["spare"] +
+                             (self.data[itr]["excess"] -
+                              self.data[itr]["excessfree"])))
             reserve_used_height = (reserve_used / fl_entitled)
             reserve_used_y = spare_y - reserve_used_height
             cr.set_source_rgba(self.settings["reserve_used_rgba"]["r"],
@@ -528,8 +584,8 @@ class iobus_memory_widget(ams_widget):
             cr.fill()
 
             # Draw excess used on top of reserve usage
-            excess_used = (self.data[iter]["excess"] -
-                           self.data[iter]["excessfree"])
+            excess_used = (self.data[itr]["excess"] -
+                           self.data[itr]["excessfree"])
             excess_used_height = excess_used / fl_entitled
             excess_used_y = reserve_used_y - excess_used_height
             cr.set_source_rgba(self.settings["excess_used_rgba"]["r"],
@@ -595,10 +651,12 @@ class iobus_memory_widget(ams_widget):
             self.queue_draw_area(0, 0, alloc.width, alloc.height)
             self.window.process_updates(True)
 
-class device_label_widget(ams_widget):
+
+class DeviceLabelWidget(AMSWidget):
     """Widget to display labels for the devices based on a gtk.DrawingArea"""
+
     def __init__(self):
-        super(device_label_widget, self).__init__()
+        super(DeviceLabelWidget, self).__init__()
 
         # Widget geometry data
         self.settings["data_width"] = 105
@@ -615,9 +673,21 @@ class device_label_widget(ams_widget):
                               (min_height + (self.settings["border"] * 2)))
 
         # Graphics colors (used for drawing the objects and the legend)
-        self.settings["entitled_rgba"] = {"r":0.5, "g":1.0, "b":0.9, "a":0.6}
-        self.settings["desired_rgba"] = {"r":1.0, "g": 0.4, "b":0.5, "a":0.6}
-        self.settings["allocated_rgba"] = {"r":0.2, "g":0.6, "b":0.2, "a":0.6}
+        self.settings["entitled_rgba"] = {
+            "r": 0.5,
+            "g": 1.0,
+            "b": 0.9,
+            "a": 0.6}
+        self.settings["desired_rgba"] = {
+            "r": 1.0,
+            "g": 0.4,
+            "b": 0.5,
+            "a": 0.6}
+        self.settings["allocated_rgba"] = {
+            "r": 0.2,
+            "g": 0.6,
+            "b": 0.2,
+            "a": 0.6}
 
     def expose(self, widget, event):
         context = widget.window.cairo_create()
@@ -648,10 +718,12 @@ class device_label_widget(ams_widget):
             self.queue_draw_area(0, 0, alloc.width, alloc.height)
             self.window.process_updates(True)
 
-class device_data_widget(ams_widget):
+
+class DeviceDataWidget(AMSWidget):
     """Widget to display system memory metrics based on a gtk.DrawingArea"""
+
     def __init__(self, data={}):
-        super(device_data_widget, self).__init__(data)
+        super(DeviceDataWidget, self).__init__(data)
 
         # Widget geometry data
         self.settings["title_width"] = 0
@@ -667,10 +739,26 @@ class device_data_widget(ams_widget):
                               (min_height + (self.settings["border"] * 2)))
 
         # Graphics colors (used for drawing the objects and the legend)
-        self.settings["entitled_rgba"] = {"r":0.5, "g":1.0, "b":0.9, "a":0.6}
-        self.settings["desired_rgba"] = {"r":1.0, "g": 0.4, "b":0.5, "a":0.6}
-        self.settings["allocated_rgba"] = {"r":0.2, "g":0.6, "b":0.2, "a":0.6}
-        self.settings["excess_used_rgba"] = {"r":0.4, "g":0.4, "b":0.4, "a":0.9}
+        self.settings["entitled_rgba"] = {
+            "r": 0.5,
+            "g": 1.0,
+            "b": 0.9,
+            "a": 0.6}
+        self.settings["desired_rgba"] = {
+            "r": 1.0,
+            "g": 0.4,
+            "b": 0.5,
+            "a": 0.6}
+        self.settings["allocated_rgba"] = {
+            "r": 0.2,
+            "g": 0.6,
+            "b": 0.2,
+            "a": 0.6}
+        self.settings["excess_used_rgba"] = {
+            "r": 0.4,
+            "g": 0.4,
+            "b": 0.4,
+            "a": 0.9}
 
     def __cmp__(self, other):
         """Compare device data widgets to other widgets (or anything).
@@ -705,7 +793,7 @@ class device_data_widget(ams_widget):
         cr.save()
 
         # Set the coordinates and scale
-        cr.move_to(0,0)
+        cr.move_to(0, 0)
         cr.translate((self.settings["border"] + self.settings["title_width"]),
                      self.settings["border"])
         cr.scale(((self.settings["bar_width"] * 2) -
@@ -720,26 +808,27 @@ class device_data_widget(ams_widget):
         bar_x = 0.5 - bar_width
         bar_overlap = 0.005
         fl_maxavail = float(self.data[0]["maxavail"])
-        for iter in range(len(self.data)):
+        for itr in range(len(self.data)):
             # Create a types.FloatType representation of maxavail so that
-            # division operations used for drawing are not cast to types.IntType
+            # division operations used for drawing are not cast to
+            # types.IntType
 
             # Draw allocated on bottom
             cr.set_source_rgba(self.settings["allocated_rgba"]["r"],
                                self.settings["allocated_rgba"]["g"],
                                self.settings["allocated_rgba"]["b"],
                                self.settings["allocated_rgba"]["a"])
-            spare_height = (self.data[iter]["allocated"] / fl_maxavail)
+            spare_height = (self.data[itr]["allocated"] / fl_maxavail)
             spare_y = 1 - spare_height
             cr.rectangle(bar_x, spare_y, (bar_width + bar_overlap),
                          spare_height)
             cr.fill()
 
             # Draw excess used from top
-            excess = self.data[iter]["allocated"] - self.data[iter]["entitled"]
+            excess = self.data[itr]["allocated"] - self.data[itr]["entitled"]
             if excess <= 0:
                 excess = 0
-            excess_used = self.data[iter]["excess_used"] - excess
+            excess_used = self.data[itr]["excess_used"] - excess
             excess_used_height = excess_used / fl_maxavail
             cr.set_source_rgba(self.settings["excess_used_rgba"]["r"],
                                self.settings["excess_used_rgba"]["g"],
