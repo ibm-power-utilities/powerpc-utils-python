@@ -6,6 +6,7 @@ Name:		%{name}
 Version:	%{version}
 Release:	%{release}
 License:	IBM Common Public License (CPL)
+Vendor:		IBM Corp.
 Group:		System Environment
 Source0:	powerpc-utils-python-%{version}.tar.gz
 BuildRoot:	/tmp/%{name}-buildroot/
