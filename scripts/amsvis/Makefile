@@ -2,7 +2,7 @@
 # Makefile for powerpc-utils/scripts/amsvis
 #
 
-AMSVIS_VERSION = `grep "define version" ../../powerpc-utils-python.spec.in | cut -d " " -f 3`
+AMSVIS_VERSION = `grep "PPU_PYTHON_VERSION =" ../../Makefile | cut -d " " -f 3`
 
 # Files built from .in files
 IN_FILES = setup.py

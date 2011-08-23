@@ -28,19 +28,15 @@ Python based utilities for maintaining and servicing PowerPC systems.
 /usr/share/doc/packages/powerpc-utils-python/COPYRIGHT
 
 /usr/bin/amsvis
-@PYTHON_SITE_PKGS@/powerpcAMS-%{version}-py@PY_VERSION@.egg-info
+@PYTHON_SITE_PKGS@/powerpcAMS-@PPU_PYTHON_VERSION@-py@PY_VERSION@.egg-info
 @PYTHON_SITE_PKGS@/powerpcAMS/__init__.py
 @PYTHON_SITE_PKGS@/powerpcAMS/__init__.pyc
-@PYTHON_SITE_PKGS@/powerpcAMS/__init__.pyo
 @PYTHON_SITE_PKGS@/powerpcAMS/amsdata.py
 @PYTHON_SITE_PKGS@/powerpcAMS/amsdata.pyc
-@PYTHON_SITE_PKGS@/powerpcAMS/amsdata.pyo
 @PYTHON_SITE_PKGS@/powerpcAMS/amsnet.py
 @PYTHON_SITE_PKGS@/powerpcAMS/amsnet.pyc
-@PYTHON_SITE_PKGS@/powerpcAMS/amsnet.pyo
 @PYTHON_SITE_PKGS@/powerpcAMS/amswidget.py
 @PYTHON_SITE_PKGS@/powerpcAMS/amswidget.pyc
-@PYTHON_SITE_PKGS@/powerpcAMS/amswidget.pyo
 
 /usr/share/man/man1/amsvis.1.gz
 
