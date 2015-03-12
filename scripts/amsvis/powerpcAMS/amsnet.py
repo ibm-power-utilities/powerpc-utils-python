@@ -1,4 +1,4 @@
-"""Network client/server for transmitting pickled data.
+"""Network client/server for transmitting json data.
 """
 
 __author__ = "Robert Jennings rcj@linux.vnet.ibm.com"
@@ -8,7 +8,7 @@ __license__ = "Common Public License v1.0"
 import socket
 import types
 import logging
-import cPickle as pickle
+import json
 
 from powerpcAMS.amsdata import gather_all_data, gather_system_data
 
@@ -23,9 +23,22 @@ DATA_METHODS = (gather_all_data, gather_system_data)
 # backwards compatibility is broken.
 CMDVERS = 1.0000000
 
+def send_json_message(socket, message):
+    json_message = json.dumps(message)
+    socket.send("%d\n" % len(json_message))
+    socket.sendall(json_message)
+
+def receive_json_message(socket):
+    len_str = ''
+    while True:
+        c = socket.recv(1)
+        if c == '\n': break
+        len_str += c
+    mesg_len = int(len_str)
+    return json.loads(socket.recv(mesg_len))
 
 def send_data_loop(port):
-    """Send pickled data to any client that connects to a given network port.
+    """Send json data to any client that connects to a given network port.
 
     Keyword arguments:
     port -- network port number to use for this server
@@ -40,7 +53,6 @@ def send_data_loop(port):
         logging.error("Network error: (%d) " % errno + errstr)
         return 1
 
-    sockfile = None
     conn = None
 
     try:
@@ -48,7 +60,6 @@ def send_data_loop(port):
             sock.listen(1)
             (conn, addr) = sock.accept()
             logging.debug("Client connected from " + repr(addr))
-            sockfile = conn.makefile('rwb', 0)
 
             result = "success"
             data = None
@@ -58,7 +69,7 @@ def send_data_loop(port):
             # request data version we can change what the server will
             # send in the future.
             try:
-                client_data = pickle.Unpickler(sockfile).load()
+                client_data = receive_json_message(conn)
             except:
                 logging.debug("Unable to parse client request.")
                 logging.info("Bad client request, ignoring.")
@@ -87,7 +98,7 @@ def send_data_loop(port):
             if result is not "error":
                 data_method = DATA_METHODS[client_data["command"]]
 
-                # Gather system data and send pickled objects to the client
+                # Gather system data and send json objects to the client
                 data = data_method()
                 if data is None:
                     result = "error"
@@ -95,19 +106,14 @@ def send_data_loop(port):
                 logging.debug("Sending %d data objects to client.", len(data))
 
             response = {"result": result, "data": data}
-            sockfile.writelines(pickle.dumps(response, -1))
 
+            send_json_message(conn, response)
             # Clean up
-            sockfile.close()
-            sockfile = None
-
             conn.close()
             conn = None
 
     # Catch a keyboard interrupt by cleaning up the socket
     except KeyboardInterrupt:
-        if sockfile:
-            sockfile.close()
         if conn:
             conn.close()
         sock.close()
@@ -116,8 +122,6 @@ def send_data_loop(port):
 
     # Catch a network error and clean up, return 1 to indicate an error
     except socket.error, msg:
-        if sockfile:
-            sockfile.close()
         if conn:
             conn.close()
         sock.close()
@@ -127,8 +131,6 @@ def send_data_loop(port):
 
     # Give the user something slightly helpful for any other error
     except:
-        if sockfile:
-            sockfile.close()
         if conn:
             conn.close()
         sock.close()
@@ -138,7 +140,7 @@ def send_data_loop(port):
 
 # Client
 def net_get_data(host="localhost", port=50000, cmd=CMD_GET_ALL_DATA):
-    """Get pickled data from a simple network server.
+    """Get json data from a simple network server.
 
     Keywork arguments:
     host -- server host name (default localhost)
@@ -161,8 +163,6 @@ def net_get_data(host="localhost", port=50000, cmd=CMD_GET_ALL_DATA):
             "data": "Client: Is the server still running?",
         }
 
-    sockfile = sock.makefile('rwb', 0) # read/write, unbuffered
-
     # By sending a request to the server, including a version for the data
     # request, we can change the data sent by the server in the future.
     if type(cmd) is types.IntType and cmd >= 0 and cmd <= CMD_MAX:
@@ -179,15 +179,13 @@ def net_get_data(host="localhost", port=50000, cmd=CMD_GET_ALL_DATA):
             "data": "Client: Bad request.",
         }
 
-    sockfile.writelines(pickle.dumps(client_request, -1))
+    send_json_message(sock, client_request)
 
     # Get server response
-    pickler = pickle.Unpickler(sockfile)
     try:
-        data = pickler.load()
+        data = receive_json_message(sock)
     except EOFError:
         pass
-    sockfile.close()
     sock.close()
 
     if type(data) is not types.DictType or "result" not in data:
